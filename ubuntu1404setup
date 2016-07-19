@@ -1,0 +1,100 @@
+#install dependences
+sudo apt-get install build-essential  
+sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev   libhdf5-serial-dev libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler  #libboost-all-dev
+sudo apt-get install cmake
+
+#install nvidia-352 dirver
+sudo apt-get install nvidia-352 nvidia-settings nvidia-prime
+
+#install cuda 7.5  +  cudnn
+ctrl+alt+F1
+sudo chmod u+x cuda_7.5.18_linux.run
+sudo ./cuda_7.5.18_linux.run
+
+uncompress cudnn
+sudo cp cudnn.h /usr/local/cuda/include/
+sudo cp libcudnn.so.7.0.64 /usr/local/cuda/lib64
+sudo ln -s libcudnn.so.7.0.64 libcudnn.so.7.0
+sudo ln -s libcudnn.so.7.0 libcudnn.so
+
+sudo gedit /etc/profile
+	export PATH=/usr/local/cuda/bin:$PATH
+	export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+sudo gedit /etc/ld.so.conf.d/cuda.conf
+	/usr/local/cuda/lib64
+
+sudo ldconfig
+
+
+#insall cuda sample
+cd /home/bwlin/NVIDIA_CUDA-7.5_Samples
+make all -j4
+
+#install atlas
+sudo apt-get install libatlas-base-dev
+
+sudo apt-get install libbz2-dev
+#install boost1.55
+sudo apt-get install libboost1.55-all-dev
+
+#uncompress boost1.55
+#./bootstrap.sh
+#./b2
+#sudo ./b2 install
+
+sudo apt-get install libvtk5-qt4-dev
+sudo apt-get install libeigen3-dev
+sudo apt-get install libflann-dev
+sudo apt-get install libopenni-dev
+
+#install opencv
+sudo add-apt-repository --yes ppa:xqms/opencv-nonfree
+sudo apt-get update
+sudo apt-get install libopencv-nonfree-dev
+
+
+
+#openssl
+sudo apt-get install libssl-dev
+
+
+#install pip
+sudo apt-get install python-pip
+
+#install Fortran
+sudo apt-get install libgfortran-4.8-dev gfortran-4.8
+
+
+#install python dependences
+uncompress /home/bwlin/files/caffe-master.zip
+cd caffe-master
+cd python
+for req in $(cat requirements.txt); do sudo pip install $req; done 
+
+#install caffe
+cd 
+cd caffe-master
+cp Makefile.config.example Makefile.config
+
+#Now that you have the prerequisites, edit your Makefile.config to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+
+mkdir build
+cd build
+cmake ..
+make all
+make runtest
+make pycaffe 
+
+
+
+
+
+
+#ssh 
+ssh -X bwlin@172.23.189.20
+
+scp bwlin@172.23.189.20:/path/filename /home/linbaowei/    #download file
+scp /path/filename bwlin@172.23.189.20:/path                        #upload file
+
+scp -r /path bwlin@172.23.189.20:/path                                    #upload folder
