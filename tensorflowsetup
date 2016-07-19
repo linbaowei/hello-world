@@ -1,0 +1,4 @@
+sudo apt-get install python-pip python-dev
+sudp pip install --upgrade files/tensorflow-0.8.0-cp27-none-linux_x86_64.whl 
+sudo apt-get install ipython 
+sudo apt-get install ipython-notebook
