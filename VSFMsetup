@@ -1,0 +1,104 @@
+Building VisualSFM on Ubuntu 12.04 (Precise Pangolin) Desktop 64-bit
+Posted on August 15, 2012 by Scott Sawyer
+
+Updated: Check out my paper on parallelizing SfM across a compute cluster
+VisualSFM by Changchang Wu is a great tool for creating 3D reconstructions of photos. It’s really easy to use, but really hard to install. This guide will take you through getting it working on a clean installation of Ubuntu 12.04 Desktop 64-bit. I’ll warn you: you’ll need to install packages, download academic software, and edit and compile source code. This will also require more than 2 GB of hard drive space. If you run into any trouble, be sure to leave me a reply at the bottom of the post.
+Getting Started
+
+Start by creating a working directory for this procedure. I’m working in “~/vsfm”, which I’ll also refer to as “/home/scott/vsfm” when instructions require an absolute path. So, open a terminal and get started:
+$ mkdir vsfm
+$ cd vsfm
+(Note, whenever you see a line beginning with “$”, that means you should type that line in your terminal.)
+Setup NVIDIA CUDA (Optional)
+
+VisualSFM supports acceleration on CUDA-enabled NVIDIA GPUs. It is also possible to set up VisualSFM to use ATI/AMD GPUs via OpenCL or to simply not use GPU acceleration. However, since I have an CUDA-enabled NVIDIA GPU, these instructions assume you do, too. (Coincidentally, the process should be easier without CUDA support, but you’ll have to figure out the details on your own.)
+Grab the Linux 64-bit driver and the CUDA toolkit from the CUDA Downloads page. NVIDIA provides decent installation instructions here, but I’ll offer some quick tips for Ubuntu users:
+Be sure to update your Ubuntu system before installation the CUDA software because if Ubuntu pushes you new Linux kernel, you’ll need to re-install the CUDA driver from scratch.
+Install the driver first (i.e. devdriver_4.2_linux_64_295.41.run) per NVIDIA’s instructions; to shutdown Ubuntu’s graphical desktop press Ctrl+Alt+F1 to get a terminal, login, then run “sudo /etc/init.d/lightdm stop”
+You can safely ignore the warning about the setup script failing.
+Reboot from the command line after driver installation completes (“sudo reboot”).
+Then install the CUDA toolkit after a reboot.
+Download the Necessary Software
+
+Let’s get started by getting the major pieces of software that comprise VisualSFM: SiftGPU, Multicore Bundle Adjustment, PMVS-2, CMVS, Graclus 1.2, and, of course, VisualSFM. You’ll also need to refer to certain installation instructions. You can find these applications and documentation pages at the following locations:
+VisualSFM: Installation Instructions and Download VisualSFM_linux_64bit.zip (4.9 MB)
+SiftGPU: Installation Instructions and Download SiftGPU-V382.zip (5.3 MB)
+Multicore Bundle Adjustment: Home Page and Download pba_v1.0.4.zip (1021 KB)
+PMVS-2: Installation Instructions and Download pmvs-2.tar.gz (315 MB) Note: link updated 5/9/13
+CMVS: Installation Instructions and Download cmvs-fix2.tar.gz (232 MB) Note: link updated 5/9/13
+Graclus 1.2: Home Page contains a form that asks for an email address prior to download
+8/20/12: New link to PMVS-2 download, which points to an older version. This older archive contains compiled object files which are necessary to get PMVS/CMVS working. Alternatively, you can download the newest release and then grab mylapack.o here, which you’ll need for later steps in this tutorial.
+5/9/13: Also note, CMVS and PMVS-2 are now hosted at http://www.di.ens.fr/. All links have been updated.
+Install Dependency Packages
+
+Next, you need to install a number of dependencies available through Ubuntu’s package manager. I’m sure you can these elsewhere on the web, but I highly recommend installing through Aptitude. To get all the required packages, just run this line (which might take a few minutes to download and install… also, be sure to copy and paste the full line below, which scrolls horizontally!):
+$ sudo apt-get install libgtk2.0-dev libglew1.6-dev libglew1.6 libdevil-dev libboost-all-dev libatlas-cpp-0.6-dev libatlas-dev imagemagick libatlas3gf-base libcminpack-dev libgfortran3 libmetis-edf-dev libparmetis-dev freeglut3-dev libgsl0-dev
+8/20/12: Added freeglut3-dev, libgsl0-dev
+Build VisualSFM
+
+Start by building VisualSFM, which should go smoothly.
+$ unzip VisualSFM_linux_64bit.zip 
+$ cd vsfm
+$ make
+Now the VisualSFM GUI is built, but it can’t actually generate 3D reconstructions yet.
+8/20/12: If you run into errors with the GTK libraries, see Shyam Nambiar’s comments below on using pkg-config.
+Build SiftGPU
+
+Next, build SiftGPU with CUDA support. Like VisualSFM, this should also “just work” if CUDA is setup properly. When you’re done, copy the shared library into the “vsfm/bin” folder.
+$ unzip SiftGPU-V382.zip 
+$ cd SiftGPU
+$ make
+$ cp bin/libsiftgpu.so ../vsfm/bin
+Build Multicore Bundle Adjustment (a.k.a. “pba”)
+
+Now things start getting tricky. Unzip (“unzip pba_v1.0.4.zip”), and then you’ll need to edit two source code files. In “pba/src/pba”, edit “SparseBundleCU.h” and “pba.h” by adding this one line to the top of each file:
+#include <stdlib.h>
+Now you can compile if you simply type “make” in the “~/vsfm/pba” directory.
+Hack PMVS-2
+
+You don’t actually have to install Bundler in order to use PMVS-2 with VisualSFM (the installation instructions are a little unclear). There’s a 64-bit Linux binary distrubtion of PMVS-2 available, but it won’t run on Ubuntu 12.04 64-bit without some hacking. If you try running the binary, you’ll get an error similar to this:
+./pmvs2: error while loading shared libraries: libjpeg.so.62: cannot open shared object file: No such file or directory
+This is because the package was compiled in an older version of Red Hat, and the binary can’t find two of the required shared libraries (even though they are, in fact, installed). Unfortunately, you also can’t just run “make” to compile your own binary because you’ll get an error with the “mylapack” library. Here’s a work-around that lets you use the compiled mylapack object file but re-compiles the rest of PMVS-2 to produce a working binary.
+$ tar xf pmvs-2.tar.gz
+$ cd pmvs-2/program/main/
+$ cp mylapack.o mylapack.o.backup
+$ make clean
+$ cp mylapack.o.backup mylapack.o
+$ make depend
+$ make
+Build Graclus 1.2
+
+The Graclus instructions actually work. After you untar graclus1.2.tar.gz, as promised, you do need to edit “Makefile.in” to set “-DNUMBITS=64″ so that the library works with your 64-bit VisualSFM installation. After making that change to the makefile, just type “make”, and it should work.
+Hack CMVS
+
+OK, now the hard part. First, unzip CMVS and grab that mylapack.o file from the PMVS-2 binary distribution:
+$ cd ~/vsfm
+$ tar xf cmvs-fix2.tar.gz
+$ cp pmvs-2/program/main/mylapack.o cmvs/program/main/
+Next, edit the source file “cmvs/program/base/cmvs/bundle.cc” by adding these includes at the top of the file:
+#include <vector>
+#include <numeric>
+And now edit “cmvs/program/main/genOption.cc” by adding this include statement at the top:
+#include <stdlib.h>
+OK, almost there! Now edit the CMVS Makefile (in cmvs/program/main) so that lines 10-17 read as follows (but be sure to replace “/home/scott/vsfm/” with the path to your installation):
+#Your INCLUDE path (e.g., -I/usr/include)
+YOUR_INCLUDE_PATH =
+
+#Your metis directory (contains header files under graclus1.2/metisLib/)
+YOUR_INCLUDE_METIS_PATH = -I/home/scott/vsfm/graclus1.2/metisLib
+
+#Your LDLIBRARY path (e.g., -L/usr/lib)
+YOUR_LDLIB_PATH = -L/home/scott/vsfm/graclus1.2
+OK, now go ahead and build the thing, and then copy the three binaries into the VisualSFM binary directory.
+$ cd ~/vsfm/cmvs/program/main
+$ make
+$ cp cmvs ~/vsfm/vsfm/bin
+$ cp pmvs2 ~/vsfm/vsfm/bin
+$ cp genOption ~/vsfm/vsfm/bin
+8/20/12: corrected filenames above
+Running VisualSFM
+
+Finally, add VisualSFM to your path and LD_LIBRARY_PATH. You can do this by adding lines to your ~/.bashrc file. Here’s what I added to the bottom of mine:
+export PATH=$PATH:/home/scott/vsfm/vsfm/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/scott/vsfm/vsfm/bin
+And you can now run VisualSFM by opening a terminal and typing “VisualSFM&”. Easy, right?
