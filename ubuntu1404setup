@@ -26,8 +26,12 @@ sudo gedit /etc/ld.so.conf.d/cuda.conf
 
 sudo ldconfig
 
+#install ANN
+make linux-g++
+sudo cp -R ANN/ /usr/local/include/
+sudo cp libANN.a /usr/local/lib/
 
-#insall cuda sample
+#install cuda sample
 cd /home/bwlin/NVIDIA_CUDA-7.5_Samples
 make all -j4
 
