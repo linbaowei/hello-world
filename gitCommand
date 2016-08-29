@@ -10,3 +10,6 @@ git config --global user.email lin-bao-wei@hotmail.com
 git add
 git commit
 git push
+
+git remote add origin https://github.com/linbaowei/HandMoudle.git
+git push -u origin master
