@@ -11,5 +11,8 @@ git add
 git commit
 git push
 
+cd HandMoudle.git
 git remote add origin https://github.com/linbaowei/HandMoudle.git
+git add -- /home/linbaowei/projects/HandMoudle.git/README.md
+git commit -m update files -- /home/linbaowei/projects/HandMoudle.git/handmoudle.cpp
 git push -u origin master
