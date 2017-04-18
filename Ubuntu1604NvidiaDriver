@@ -1,0 +1,25 @@
+Nvidia
+
+Install Nvidia driver 375
+
+sudo apt install nvidia-settings nvidia-prime nvidia-375
+Cuda
+
+Download and install CUDA-8.0 from nvidia.com
+libEGL.so
+
+If you encounter the following error after installing nvidia-XXX driver
+
+/sbin/ldconfig.real: /usr/lib/nvidia-375/libEGL.so.1 is not a symbolic link
+
+/sbin/ldconfig.real: /usr/lib32/nvidia-375/libEGL.so.1 is not a symbolic link
+
+Do the follwing
+
+sudo mv /usr/lib/nvidia-375/libEGL.so.1 /usr/lib/nvidia-375/libEGL.so.1.org
+
+sudo mv /usr/lib32/nvidia-375/libEGL.so.1 /usr/lib32/nvidia-375/libEGL.so.1.org
+
+sudo ln -s /usr/lib/nvidia-375/libEGL.so.375.39 /usr/lib/nvidia-375/libEGL.so.1
+
+sudo ln -s /usr/lib32/nvidia-375/libEGL.so.375.39 /usr/lib32/nvidia-375/libEGL.so.1
