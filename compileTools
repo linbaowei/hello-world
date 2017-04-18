@@ -1,0 +1,14 @@
+1. Valgrind
+valgrind ./myProgram myProgramsFirstArg myProgramsSecondArg
+#误用未初始化的值:Conditional jump or move depends on uninitialized value(s)
+
+#操作你不该去碰的内存。读写从来没被分配出来的内存，被释放掉的内存;访问超过一块分配好的内存的边界的内存;栈上不能读写的内存:Invalid write of size 4(byte)
+
+valgrind --leak-check=full ./myProgram
+#内存泄露了:4 bytes in 1 blocks are definitely lost in loss record 1 of 1
+valgrind --tool=memcheck --leak-check=full ./test
+#使用Valgrind检查程序BUG
+
+
+valgrind --tool=callgrind ./myProgram
+#它会在被测试程序的目录下生成一个类似名为 ”callgrind.out.2887“ 的文件。下载程序 KCachegrind，它提供一个可视化的界面，显示您的程序的执行路径以及哪个函数在吞噬您宝贵的内存。一目了然，你很快就知道自己该把火力集中在哪里了。它列出了每个函数的时间消耗（wall time），内存（百分比）消耗和调用次数。 Google 一下，你能搜到很多它生成的其他有趣的图表。
